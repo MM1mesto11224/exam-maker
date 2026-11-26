@@ -1,0 +1,96 @@
+/* ورقة الامتحان (المعاينة والطباعة) */
+.paper{background:#fff;color:#111;box-shadow:0 8px 30px rgba(0,0,0,.35);padding:14mm 12mm 12mm;width:210mm;min-height:296.5mm;position:relative;box-sizing:border-box}
+.paper *{box-sizing:border-box}
+.paper .frame{position:absolute;inset:5mm;border:2px solid #333;pointer-events:none}
+.paper .frame.f-double{outline:1px solid #333;outline-offset:3px}
+.paper .frame.f-thick{border:4.5px solid var(--hc)}
+.paper .frame.f-ornate{border:2.5px solid var(--hc);outline:1px solid var(--hc);outline-offset:4px}
+.paper .frame.f-none{display:none}
+.paper .pcontent{position:relative;padding:0 3mm}
+
+/* الكليشة */
+.paper .ph{display:flex;align-items:flex-start;gap:10px;border-bottom:2.5px solid var(--hc);padding-bottom:7px;font-size:var(--hs)}
+.paper .ph .colr{flex:1.25;padding-top:4px}
+.paper .ph .min{font-size:.85em;color:#444}
+.paper .ph .sname{font-size:1.35em;font-weight:900;color:var(--hc);line-height:1.5}
+.paper .ph .colc{flex:1;text-align:center}
+.paper .ph .colc img{width:54px;height:54px;object-fit:contain}
+.paper .ph .yr{color:#444}
+.paper .ph .trm{font-weight:800;color:var(--hc)}
+.paper .ph .coll{flex:1.25;line-height:1.75;padding-top:2px}
+.paper .ph .coll b{color:var(--hc)}
+.paper .phd-band{background:linear-gradient(135deg,var(--hc),#0a2030);border-radius:10px;padding:10px 14px;border-bottom:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .phd-band .sname,.paper .phd-band .yr,.paper .phd-band .trm,.paper .phd-band .coll,.paper .phd-band .coll b,.paper .phd-band .min{color:#fff}
+.paper .phd-center{flex-direction:column;align-items:center}
+.paper .phd-center>div{text-align:center;width:100%}
+.paper .phd-gold{background:linear-gradient(135deg,#f7e08a,#e9c860 55%,#f7e08a);border:2.5px double #8a6d1f;border-radius:10px;padding:10px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .phd-gold .sname,.paper .phd-gold .yr,.paper .phd-gold .trm,.paper .phd-gold .coll,.paper .phd-gold .coll b{color:#3a2c05}
+
+.paper .poetry{border:2.2px double var(--hc);border-radius:10px;padding:8px 14px;margin:8px 0 4px;text-align:center;background:#fdfaf2;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .poetry .poet{font-weight:700;color:var(--hc);margin-bottom:3px}
+.paper .instr{border:2px solid;border-radius:9px;padding:4px 12px;margin:8px 0 2px;text-align:center;font-weight:800}
+.paper .instr.orange{border-color:#e07b00;color:#a85a00}
+.paper .instr.violet{border-color:#7c4dc4;color:#5b30a0}
+.paper .akey{text-align:center;font-weight:800;font-size:1.25em;border:2px solid var(--hc);color:var(--hc);border-radius:8px;padding:2px 0 5px;margin:10px 0}
+
+/* الأسئلة */
+.paper .pq{margin-top:var(--qgap)}
+.paper .pqtitle{font-weight:900;display:flex;justify-content:space-between;gap:8px}
+.paper .qnum{color:var(--qc);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .pqnote{font-weight:400;font-style:italic;color:#555;font-size:.92em}
+.paper .pm{white-space:nowrap;font-weight:700;color:#333}
+.paper .pqtext{margin-top:2px}
+.paper .mcq{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;margin-top:3px}
+.paper .pbranch{margin-top:5px;display:flex;gap:7px}
+.paper .pbranch .bl{font-weight:800;white-space:nowrap;color:#15803d;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .pbranch .bt{flex:1}
+.paper .pbranch .bm{margin-inline-start:auto;color:#444;font-size:.88em;white-space:nowrap}
+.paper .alines{margin-top:6px}
+.paper .alines div{border-bottom:1.4px dotted #8ea4b3;height:26px}
+.paper .ansprint{border:1.6px solid #2e7d32;border-radius:8px;padding:3px 10px;margin-top:3px;background:#f7fcf7;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.paper .qsep{display:flex;align-items:center;gap:8px;margin:calc(var(--qgap)*.8) 0 0;color:var(--hc)}
+.paper .qsep .ql{flex:1;border-top:1.4px solid currentColor;opacity:.5}
+.paper .qsep .qo{font-size:13px;line-height:1}
+.paper .meta2{color:#888}
+
+.paper .pfoot{margin-top:14px;border-top:1.6px solid #333;padding-top:6px;display:flex;justify-content:space-between;font-size:.92em;min-height:8px}
+.paper .phrase{text-align:center;margin-top:8px;font-weight:800;color:var(--hc);font-size:.95em}
+
+/* تبويب الدرجات */
+.paper .mtabp{margin-top:12px}
+.paper .mtabp .mtabh{font-weight:800;text-align:center;margin-bottom:3px;color:var(--hc)}
+.paper .mtabp table{width:100%;border-collapse:collapse;font-size:.9em}
+.paper .mtabp th,.paper .mtabp td{border:1.2px solid #333;padding:2px 6px;text-align:center}
+.paper .mtabp th{background:#f2f2f2;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* عناصر المحرر المشتركة (معادلات، كسور، جداول…) */
+.eq{display:inline-block;direction:ltr;unicode-bidi:isolate;text-align:left}
+.frac{display:inline-block;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.15;direction:ltr;unicode-bidi:isolate}
+.frac .num{display:block;border-bottom:1.6px solid currentColor;padding:0 4px}
+.frac .den{display:block;padding:0 4px}
+.rt{display:inline-block;direction:ltr}
+.root{display:inline-block;border-top:1.6px solid currentColor;padding:0 3px;margin-inline-start:1px}
+.blank{display:inline-block;min-width:95px;border-bottom:1.8px solid #333;height:1em;vertical-align:bottom}
+.ayah{font-weight:700}
+.qref{font-size:.78em;color:#666;font-weight:400}
+.ptable{border-collapse:collapse;width:100%;margin:6px 0}
+.ptable td,.ptable th{border:1.3px solid #666;padding:4px 7px;min-width:34px}
+.ptable th{background:#e8eef5;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fig{display:inline-block;margin:2px 4px;vertical-align:middle}
+
+/* الطباعة */
+#printArea{display:none}
+.sheet{break-after:page}
+.sheet:last-child{break-after:auto}
+.sheet .paper{box-shadow:none;margin:0 auto}
+.sheet.land{page:land;width:297mm;height:210mm;display:flex;overflow:hidden}
+.sheet.land .cell{overflow:hidden;position:relative;flex:1}
+.sheet.land.n2 .paper{zoom:.7071}
+.sheet.land.n3 .paper{zoom:.4714}
+@page land{size:A4 landscape;margin:0}
+@page{size:A4;margin:0}
+@media print{
+  html,body{background:#fff!important}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important}
+}

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f4c5c">
+<title>صانع الامتحانات المفتوح</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/paper.css">
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">
+    <span class="logo">📝</span>
+    <div>
+      <h1>صانع الامتحانات المفتوح</h1>
+      <div class="sub">أوراق امتحانية جاهزة للطباعة — معادلات، أسئلة مفرّعة، كليشة، Word وPDF</div>
+    </div>
+  </div>
+  <div class="credit">تصميم: <a id="creditLink" target="_blank" rel="noopener"></a></div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="info" class="on">🏫 البيانات</button>
+  <button data-tab="questions">❓ الأسئلة</button>
+  <button data-tab="extras">📖 القرآن والشعر</button>
+  <button data-tab="design">🎨 التنسيق</button>
+  <button data-tab="marks">📊 الدرجات</button>
+  <button data-tab="output">🖨️ المعاينة والتصدير</button>
+  <button data-tab="archive">🗂️ الأرشيف</button>
+</nav>
+
+<main>
+<!-- ===== البيانات ===== -->
+<section class="panel on" id="tab-info">
+  <div class="card">
+    <h2>الكليشة — بيانات الامتحان</h2>
+    <div class="logo-row">
+      <img id="logoPreview" alt="شعار المدرسة" hidden>
+      <div class="actions">
+        <button class="btn sm" id="btnLogo">🖼️ شعار المدرسة</button>
+        <button class="btn sm danger" id="btnLogoRemove">إزالة الشعار</button>
+        <input type="file" id="logoFile" accept="image/*" hidden>
+      </div>
+    </div>
+    <div class="grid">
+      <label>الوزارة / الجهة (سطر أعلى الكليشة)<input data-bind="info.ministry" placeholder="مثال: وزارة التربية"></label>
+      <label>اسم المدرسة<input data-bind="info.school" placeholder="مثال: ثانوية النور"></label>
+      <label>المادة<input data-bind="info.subject" list="dlSubjects" placeholder="اختر أو اكتب"></label>
+      <label>الصف / المرحلة<input data-bind="info.grade" list="dlGrades" placeholder="اختر أو اكتب"></label>
+      <label>العام الدراسي<input data-bind="info.year" placeholder="2026-2027"></label>
+      <label>الدور / الفصل / الشهر<input data-bind="info.term" list="dlTerms"></label>
+      <label>تاريخ الامتحان<input type="date" data-bind="info.date"></label>
+      <label>زمن الامتحان<input data-bind="info.time" placeholder="مثال: ساعتان"></label>
+      <label>الدرجة الكلية<input type="number" min="0" data-bind="info.total"></label>
+    </div>
+    <datalist id="dlSubjects"></datalist><datalist id="dlGrades"></datalist><datalist id="dlTerms"></datalist>
+  </div>
+</section>
+
+<!-- ===== الأسئلة ===== -->
+<section class="panel" id="tab-questions">
+  <div class="toolbar-wrap">
+    <div class="toolbar" id="toolbar">
+      <button id="tbMic" title="إملاء صوتي">🎤</button>
+      <button data-cmd="bold" title="عريض"><b>ع</b></button>
+      <button data-cmd="italic" title="مائل"><i>م</i></button>
+      <button data-cmd="underline" title="تحته خط"><u>خ</u></button>
+      <span class="sep"></span>
+      <button data-cmd="superscript" title="أس">x²</button>
+      <button data-cmd="subscript" title="رمز سفلي">x₂</button>
+      <button id="tbFrac">½ كسر</button>
+      <button id="tbRoot">√ جذر</button>
+      <span class="sep"></span>
+      <button data-panel="symbols">Ω رموز</button>
+      <button data-panel="chem">⚗️ كيمياء</button>
+      <button data-panel="eq">🧮 معادلة</button>
+      <button data-panel="laws">🧪 قوانين</button>
+      <button data-panel="fig">🔷 أشكال</button>
+      <button data-panel="img">🖼️ صورة</button>
+      <button data-panel="table">▦ جدول</button>
+      <button id="tbBlank">── فراغ</button>
+      <span class="sep"></span>
+      <input type="color" id="tbColor" value="#b3261e" title="لون النص">
+      <button id="tbColorApply">تلوين</button>
+      <button id="tbColorClear">إزالة</button>
+    </div>
+    <span id="micStatus" class="meta"></span>
+
+    <div class="tpanel" id="p-symbols"></div>
+    <div class="tpanel" id="p-chem">
+      <label class="check"><input type="checkbox" id="chemMode"> وضع الكيمياء: كل رقم تكتبه بعد حرف يتحول تلقائيًا إلى رقم سفلي (H2SO4 ← H₂SO₄)</label>
+      <div class="chips" id="chemChips"></div>
+    </div>
+    <div class="tpanel" id="p-eq">
+      <div class="meta">اكتب بصيغة بسيطة وتظهر المعاينة فورًا، ثم اضغط إدراج. أمثلة: <code>x^2</code> · <code>H_2O</code> · <code>frac{a}{b}</code> · <code>sqrt{x}</code> · <code>-&gt;</code> · <code>\pi</code></div>
+      <div class="row">
+        <input id="eqIn" dir="ltr" placeholder="x^2 + frac{1}{2} = sqrt{9}" autocomplete="off">
+        <select id="eqMode"><option value="math">رياضيات / فيزياء</option><option value="chem">كيمياء</option></select>
+        <button class="btn sm green" id="eqInsert">✨ إدراج</button>
+      </div>
+      <div class="chips" id="eqChips"></div>
+      <div id="eqPrev" class="eqprev"><span class="meta">المعاينة تظهر هنا…</span></div>
+    </div>
+    <div class="tpanel" id="p-laws"></div>
+    <div class="tpanel" id="p-fig">
+      <div class="chips" id="figChips"></div>
+      <div class="row">
+        <label>تدوير الشكل: <b id="figRotVal">0</b>°<input type="range" id="figRot" min="0" max="360" step="5" value="0"></label>
+        <label>زاوية بقياس محدد (°)<input type="number" id="angDeg" min="5" max="175" value="45" style="width:90px"></label>
+        <button class="btn sm" id="btnAngle">📐 إدراج الزاوية</button>
+      </div>
+    </div>
+    <div class="tpanel" id="p-img">
+      <div class="row"><button class="btn sm" id="btnPickImg">اختيار صورة…</button><input type="file" id="imgFile" accept="image/*" hidden></div>
+      <div id="imgBox" hidden>
+        <img id="imgPrev" alt="معاينة">
+        <label>عرض الصورة في الورقة: <b id="imgWVal">45</b>%<input type="range" id="imgW" min="15" max="100" value="45"></label>
+        <label class="check"><input type="checkbox" id="imgCut"> ✂️ تفريغ الخلفية (للرسوم والشعارات ذات الخلفية الموحّدة)</label>
+        <label>قوة التفريغ: <b id="imgTolVal">42</b><input type="range" id="imgTol" min="10" max="120" value="42"></label>
+        <div class="actions"><button class="btn sm green" id="imgInsert">⬇️ إدراج في السؤال</button><button class="btn sm ghost" id="imgCancel">إلغاء</button></div>
+      </div>
+    </div>
+    <div class="tpanel" id="p-table">
+      <div class="row">
+        <label>الصفوف<input type="number" id="tRows" min="1" max="12" value="3" style="width:80px"></label>
+        <label>الأعمدة<input type="number" id="tCols" min="1" max="8" value="3" style="width:80px"></label>
+        <label class="check"><input type="checkbox" id="tHead" checked> صف عنوان مظلّل</label>
+        <button class="btn sm green" id="tInsert">⬇️ إدراج الجدول</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>الأسئلة <span class="meta" id="qCount"></span></h2>
+    <div class="meta hint">اضغط داخل أي نص (سؤال أو فرع أو إجابة) لتنشيط شريط الأدوات عليه، ثم أدرج ما تريد في مكان المؤشر.</div>
+    <div id="qList"></div>
+    <div class="actions">
+      <button class="btn green grow" id="btnAddQ">➕ إضافة سؤال</button>
+      <button class="btn ghost" id="btnDemo">🧪 مثال جاهز</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== القرآن والشعر ===== -->
+<section class="panel" id="tab-extras">
+  <div class="card">
+    <h2>🔍 البحث في آيات القرآن الكريم</h2>
+    <div id="quranSetup" class="notice" hidden></div>
+    <div class="grid2">
+      <label>كلمات من الآية<input id="qSearch" placeholder="مثال: نور السماوات"></label>
+      <label>السورة (اختياري)<select id="qSurah"><option value="0">كل السور</option></select></label>
+    </div>
+    <div class="actions">
+      <button class="btn grow" id="btnQSearch">🔍 بحث</button>
+      <label class="check"><input type="checkbox" id="qRef" checked> إدراج المصدر</label>
+    </div>
+    <div class="meta hint">للإدراج: اضغط داخل نص سؤال أو فرع (تبويب «الأسئلة») ثم عُد إلى هنا واضغط «إدراج».</div>
+    <div id="qResults"></div>
+  </div>
+  <div class="card">
+    <h2>🖋️ الشعر والأبيات</h2>
+    <div class="grid2">
+      <label>اسم الشاعر<input data-bind="info.poet" placeholder="مثال: أبو الطيب المتنبي"></label>
+      <label style="grid-column:1/-1">الأبيات (كل بيت في سطر)<textarea data-bind="info.verses" rows="3"></textarea></label>
+    </div>
+    <div class="meta">تظهر الأبيات في إطار أنيق تحت الكليشة في الورقة المطبوعة.</div>
+  </div>
+</section>
+
+<!-- ===== التنسيق ===== -->
+<section class="panel" id="tab-design">
+  <div class="card">
+    <h2>تنسيق الورقة</h2>
+    <div class="grid">
+      <label>خط الورقة<select data-bind="design.font">
+        <option value="'Traditional Arabic',serif">Traditional Arabic</option>
+        <option value="'Simplified Arabic',sans-serif">Simplified Arabic</option>
+        <option value="'Times New Roman',serif">Times New Roman</option>
+        <option value="Tahoma,sans-serif">Tahoma</option>
+        <option value="Arial,sans-serif">Arial</option>
+      </select></label>
+      <label>لغة الورقة المطبوعة<select data-bind="design.lang"><option value="ar">العربية</option><option value="en">English</option><option value="fr">Français</option></select></label>
+      <label>تصميم الكليشة<select data-bind="design.head">
+        <option value="classic">كلاسيكي</option><option value="band">شريط ملوّن</option><option value="center">وسطي رسمي</option><option value="gold">ذهبي</option></select></label>
+      <label>إطار الورقة<select data-bind="design.frame">
+        <option value="f-single">مفرد</option><option value="f-double">مزدوج</option><option value="f-thick">سميك ملوّن</option>
+        <option value="f-ornate">مزخرف ملوّن</option><option value="f-none">بدون إطار</option></select></label>
+      <label>الفاصل بين الأسئلة<select data-bind="design.sep">
+        <option value="orn">❖ زخرفة</option><option value="star">✦ نجوم</option><option value="line">خط</option><option value="none">بدون</option></select></label>
+      <label>حجم خط الأسئلة: <b data-out="design.size"></b><input type="range" data-bind="design.size" min="12" max="24" step="0.5"></label>
+      <label>حجم خط الكليشة: <b data-out="design.hsize"></b><input type="range" data-bind="design.hsize" min="10" max="24" step="0.5"></label>
+      <label>تباعد الأسطر: <b data-out="design.lineH"></b><input type="range" data-bind="design.lineH" min="1.3" max="2.3" step="0.05"></label>
+      <label>المسافة بين الأسئلة (مم): <b data-out="design.qgap"></b><input type="range" data-bind="design.qgap" min="0" max="10" step="0.2"></label>
+      <label>الهامش العلوي (مم): <b data-out="design.padTop"></b><input type="range" data-bind="design.padTop" min="2" max="30"></label>
+      <label>سطور إجابة افتراضية بعد كل سؤال<input type="number" min="0" max="12" data-bind="design.lines"></label>
+      <label>لون عناوين الأسئلة<input type="color" data-bind="design.qcolor"></label>
+      <label>لون الكليشة<input type="color" data-bind="design.hcolor"></label>
+      <label>لون نص الأسئلة<input type="color" data-bind="design.tcolor"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>الملاحظة والتذييل</h2>
+    <div class="grid">
+      <label class="check"><input type="checkbox" data-bind="design.instr"> إظهار ملاحظة داخل إطار قبل الأسئلة</label>
+      <label>نص الملاحظة<input data-bind="design.instrText" placeholder="أجب عن خمسة أسئلة فقط"></label>
+      <label>لون إطار الملاحظة<select data-bind="design.instrColor"><option value="orange">🟠 برتقالي</option><option value="violet">🟣 بنفسجي</option></select></label>
+      <label>اسم مدرّس المادة (أسفل الورقة)<input data-bind="info.teacher"></label>
+      <label>العبارة التشجيعية<input data-bind="design.phrase" list="dlPhrases"></label>
+      <label class="check"><input type="checkbox" data-bind="design.marksTable"> إظهار تبويب الدرجات أسفل الورقة</label>
+    </div>
+    <datalist id="dlPhrases"></datalist>
+  </div>
+</section>
+
+<!-- ===== الدرجات ===== -->
+<section class="panel" id="tab-marks">
+  <div class="card">
+    <h2>📊 تبويب الدرجات</h2>
+    <div id="marksWrap"></div>
+    <div class="actions"><button class="btn ghost sm" id="btnSpread">⚖️ توزيع الدرجة الكلية بالتساوي</button></div>
+    <div class="meta hint">أي تعديل هنا ينعكس فورًا على الأسئلة وعلى الورقة المطبوعة.</div>
+  </div>
+</section>
+
+<!-- ===== المعاينة والتصدير ===== -->
+<section class="panel" id="tab-output">
+  <div class="card">
+    <h2>🖨️ الطباعة والحفظ</h2>
+    <div class="actions">
+      <button class="btn gold grow" id="btnPrint">🖨️ طباعة / حفظ PDF</button>
+      <button class="btn grow" id="btnPrintKey">📗 طباعة نموذج الإجابة</button>
+    </div>
+    <div class="actions">
+      <button class="btn grow" id="btnWord">📘 حفظ Word</button>
+      <button class="btn grow" id="btnExcel">📊 حفظ Excel</button>
+      <button class="btn ghost" id="btnRefresh">🔄 تحديث المعاينة</button>
+    </div>
+    <div class="grid">
+      <label>عدد النسخ<input type="number" id="pCopies" min="1" max="100" data-bind="design.copies"></label>
+      <label>نسخ في الصفحة الواحدة<select data-bind="design.perPage"><option value="1">نسخة واحدة</option><option value="2">نسختان (أفقي)</option><option value="3">ثلاث نسخ (أفقي)</option></select></label>
+      <label>ملاءمة الصفحات<select data-bind="design.fit"><option value="0">بدون (الحجم الطبيعي)</option><option value="1">تصغير ليناسب صفحة واحدة</option><option value="2">تصغير ليناسب صفحتين</option></select></label>
+      <label class="check"><input type="checkbox" data-bind="design.answersSheet"> إلحاق نموذج الإجابة بصفحة ثانية عند الطباعة</label>
+    </div>
+    <div class="meta hint">«حفظ PDF»: من نافذة الطباعة اختر «حفظ بصيغة PDF». ملف Word قابل للتعديل (المعادلات البسيطة تتحول إلى معادلات Word).</div>
+  </div>
+  <div class="card proof">
+    <h2>🔍 التدقيق قبل الطباعة</h2>
+    <div class="meta">يفحص الأخطاء الإملائية الشائعة (الهمزات…) ومسافات علامات الترقيم، ويصلحها بضغطة.</div>
+    <div class="actions"><button class="btn sm" id="btnProof">فحص الأسئلة</button><button class="btn sm green" id="btnFixAll" hidden>✔ إصلاح الكل</button></div>
+    <div id="proofOut"></div>
+  </div>
+  <div id="previewWrap"><div id="preview"></div></div>
+</section>
+
+<!-- ===== الأرشيف ===== -->
+<section class="panel" id="tab-archive">
+  <div class="card">
+    <h2>🗂️ أرشيف الامتحانات</h2>
+    <div class="row">
+      <input id="saveName" placeholder="اسم الحفظ — مثال: أحياء — الفصل الأول — التاسع">
+      <button class="btn green" id="btnSaveExam">💾 حفظ في الأرشيف</button>
+    </div>
+    <div id="examList"></div>
+    <div class="actions">
+      <button class="btn sm ghost" id="btnExport">⬇️ تصدير نسخة (JSON)</button>
+      <button class="btn sm ghost" id="btnImport">⬆️ استيراد نسخة</button>
+      <input type="file" id="jsonFile" accept=".json,application/json" hidden>
+      <button class="btn sm danger" id="btnWipe">🗑️ مسح الكل وبدء امتحان جديد</button>
+    </div>
+    <div class="meta hint">بياناتك محفوظة على هذا الجهاز فقط. صدّر نسخة JSON دوريًا للاحتفاظ بها.</div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  برنامج مفتوح المصدر (MIT) — تصميم <a id="creditLink2" target="_blank" rel="noopener"></a><br>نص القرآن الكريم: <a href="https://tanzil.net" target="_blank" rel="noopener">مشروع Tanzil — tanzil.net</a>
+</footer>
+
+<div id="printArea"></div>
+<div id="toast" role="status"></div>
+
+<script src="js/data.js"></script>
+<script src="js/format.js"></script>
+<script src="js/store.js"></script>
+<script src="js/paper.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/quran.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
