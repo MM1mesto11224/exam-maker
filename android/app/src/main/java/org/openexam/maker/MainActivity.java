@@ -115,13 +115,15 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void printPage() {
+        public void printPage(final boolean landscape) {
             runOnUiThread(new Runnable() {
                 @Override public void run() {
                     PrintManager pm = (PrintManager) getSystemService(PRINT_SERVICE);
                     PrintDocumentAdapter adapter = web.createPrintDocumentAdapter("exam");
-                    pm.print("exam", adapter, new PrintAttributes.Builder()
-                            .setMediaSize(PrintAttributes.MediaSize.ISO_A4).build());
+                    PrintAttributes.MediaSize size = landscape
+                            ? PrintAttributes.MediaSize.ISO_A4.asLandscape()
+                            : PrintAttributes.MediaSize.ISO_A4;
+                    pm.print("exam", adapter, new PrintAttributes.Builder().setMediaSize(size).build());
                 }
             });
         }
@@ -137,9 +139,10 @@ public class MainActivity extends Activity {
                 v.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
                 Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
                 if (uri == null) throw new Exception("insert failed");
-                OutputStream o = getContentResolver().openOutputStream(uri);
-                o.write(bytes);
-                o.close();
+                try (OutputStream o = getContentResolver().openOutputStream(uri)) {
+                    if (o == null) throw new Exception("openOutputStream returned null");
+                    o.write(bytes);
+                }
             } else {
                 if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQ_STORAGE);
@@ -148,9 +151,9 @@ public class MainActivity extends Activity {
                 }
                 File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                 dir.mkdirs();
-                FileOutputStream o = new FileOutputStream(new File(dir, name));
-                o.write(bytes);
-                o.close();
+                try (FileOutputStream o = new FileOutputStream(new File(dir, name))) {
+                    o.write(bytes);
+                }
             }
             Toast.makeText(this, "تم الحفظ في التنزيلات: " + name, Toast.LENGTH_LONG).show();
         } catch (Exception e) {

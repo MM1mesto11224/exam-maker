@@ -98,7 +98,8 @@ EM.paper = (function () {
   }
 
   /* تجميع صفحات الطباعة: نسخ × عدد في الصفحة × ملاءمة */
-  function printHtml(S, mode) {
+  function printHtml(S, mode, o) {
+    o = o || {};
     const d = S.design, per = +d.perPage || 1, copies = Math.max(1, +d.copies || 1);
     const sheets = Math.ceil(copies / per);
     const key = mode === "key";
@@ -108,7 +109,7 @@ EM.paper = (function () {
       if (per === 1) out += "<div class='sheet'>" + one + "</div>";
       else out += "<div class='sheet land n" + per + "'>" + ("<div class='cell'>" + one + "</div>").repeat(per) + "</div>";
     }
-    if (mode === "exam" && d.answersSheet) out += "<div class='sheet'>" + render(S, { key: true }) + "</div>";
+    if (mode === "exam" && d.answersSheet && !o.noKey) out += "<div class='sheet'>" + render(S, { key: true }) + "</div>";
     return out;
   }
 

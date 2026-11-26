@@ -190,9 +190,12 @@
   }
   function doPrint(mode) {
     const area = $("printArea"), pages = +EM.S.design.fit || 0;
-    area.innerHTML = EM.paper.printHtml(EM.S, mode);
+    const android = !!(window.Android && typeof Android.printPage === "function"), land = (+EM.S.design.perPage || 1) > 1;
+    // على أندرويد لا يمكن خلط صفحات أفقية وعمودية في مهمة طباعة واحدة، فيُطبع نموذج الإجابة منفصلًا
+    area.innerHTML = EM.paper.printHtml(EM.S, mode, { noKey: android && land });
+    if (android && land && mode === "exam" && EM.S.design.answersSheet) EM.toast("طباعة أفقية: اطبع نموذج الإجابة بزر «طباعة نموذج الإجابة» بشكل منفصل");
     if (pages) fitSheets(area, pages);
-    setTimeout(() => { if (window.Android && typeof Android.printPage === "function") Android.printPage(); else window.print(); }, 60);
+    setTimeout(() => { if (android) Android.printPage(land && mode === "exam"); else window.print(); }, 60);
   }
 
   /* ---------- التدقيق ---------- */
@@ -284,7 +287,7 @@
     const ok = await EM.quran.load(), note = $("quranSetup");
     if (!ok) {
       note.hidden = false;
-      note.innerHTML = "نص القرآن غير مضمَّن في البرنامج. حمّل ملف <b>quran-uthmani.txt</b> (النص العثماني، صيغة Tanzil) من <a href='https://tanzil.net/download/' target='_blank' rel='noopener'>tanzil.net/download</a> ثم اختره هنا مرة واحدة فقط — يُحفظ على جهازك ويعمل دون إنترنت.<div class='actions'><button class='btn sm' id='btnQFile'>📂 اختيار ملف القرآن</button><input type='file' id='qFile' accept='.txt' hidden></div>";
+      note.innerHTML = "نص القرآن غير مضمَّن في البرنامج. حمّل ملف <b>quran-uthmani.txt</b> (النص العثماني، صيغة Tanzil) من <a href='https://tanzil.net/download/' target='_blank' rel='noopener'>tanzil.net/download</a> ثم اختره هنا مرة واحدة فقط — يُحفظ على جهازك ويعمل دون إنترنت.<div class='actions'><button class='btn sm' id='btnQFile'>📂 اختيار ملف القرآن</button><input type='file' id='qFile' hidden></div>";
       $("btnQFile").onclick = () => $("qFile").click();
       $("qFile").onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const n = await EM.quran.importFile(f); note.hidden = true; EM.toast("تم تحميل " + n + " آية ✔"); } catch (x) { EM.toast("الملف غير مطابق للصيغة المطلوبة", true); } };
     }
