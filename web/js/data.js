@@ -26,13 +26,13 @@ EM.ORD_AR = ["الأول", "الثاني", "الثالث", "الرابع", "ال
 EM.LABELS = {
   ar: { dir: "rtl", question: "السؤال", marks: "درجة", subject: "المادة", grade: "الصف", date: "التاريخ", time: "الزمن",
     total: "الدرجة الكلية", year: "العام الدراسي", teacher: "مدرّس المادة", key: "نموذج الإجابة", obtained: "الدرجة المستحقة",
-    full: "الدرجة", sum: "المجموع", marksTitle: "تبويب الدرجات", branch: ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي"], ordinal: true },
+    full: "الدرجة", sum: "المجموع", marksTitle: "تبويب الدرجات", branch: ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي"], ordinal: true, name_ar: "الاسم", num_ar: "الرقم" },
   en: { dir: "ltr", question: "Question", marks: "marks", subject: "Subject", grade: "Class", date: "Date", time: "Time",
     total: "Total marks", year: "Academic year", teacher: "Teacher", key: "Answer Key", obtained: "Score",
-    full: "Marks", sum: "Total", marksTitle: "Marks Table", branch: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], ordinal: false },
+    full: "Marks", sum: "Total", marksTitle: "Marks Table", name: "Name", number: "No.", end: "- End of questions -", partA: "(A)", partB: "(B)", branch: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], ordinal: false },
   fr: { dir: "ltr", question: "Question", marks: "points", subject: "Matière", grade: "Classe", date: "Date", time: "Durée",
     total: "Total", year: "Année scolaire", teacher: "Enseignant", key: "Corrigé", obtained: "Note",
-    full: "Points", sum: "Total", marksTitle: "Barème", branch: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], ordinal: false }
+    full: "Points", sum: "Total", marksTitle: "Barème", name: "Nom", number: "N°", end: "- Fin des questions -", partA: "(A)", partB: "(B)", branch: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"], ordinal: false }
 };
 
 EM.SYMBOLS = [

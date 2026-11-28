@@ -66,20 +66,31 @@
       "<button class='iconbtn' data-act='up' title='أعلى'>↑</button><button class='iconbtn' data-act='down' title='أسفل'>↓</button>" +
       "<button class='iconbtn' data-act='dup' title='نسخ'>⧉</button><button class='iconbtn' data-act='del' title='حذف'>🗑</button></div>";
     h += "<input data-f='note' placeholder='ملاحظة بجانب العنوان (اختياري) مثال: اختر الإجابة الصحيحة' value='" + E(q.note) + "' style='margin-bottom:6px'>";
-    h += rich("html", "اكتب نص السؤال هنا…", q.html);
+    h += "<input data-f='title' placeholder='عنوان القسم للنمط الإنكليزي/الفرنسي، مثال: Read the following text then choose the correct answer' value='" + E(q.title) + "' style='margin-bottom:6px;direction:ltr;text-align:left'>";
+    h += rich("html", "اكتب نص السؤال (أو النص المقروء) هنا…", q.html);
     if (q.type === "mcq") {
       h += "<div class='mcqopts'>" + q.opts.map((o, k) => "<div><input type='radio' name='c" + q.id + "' data-f='correct' data-k='" + k + "' " + (q.correct === k ? "checked" : "") + " title='الإجابة الصحيحة'>" +
         "<b>" + L.branch[k] + ")</b><input data-f='opt' data-k='" + k + "' value='" + E(o) + "' placeholder='الخيار'></div>").join("") + "</div>";
     }
+    const exam = EM.S.design.layout === "exam";
+    let bn = 0;
     q.branches.forEach((b, k) => {
-      h += "<div class='branch' data-bid='" + b.id + "'><div class='bhead'><span class='blabel'>" + L.branch[k] + "</span>" +
+      const kinds = Object.keys(EM.KINDS).filter(x => exam || x === "text" || x === "mcq" || x === b.kind);
+      const lbl = exam ? (b.kind === "head" ? "•" : "#" + (++bn)) : L.branch[k];
+      h += "<div class='branch' data-bid='" + b.id + "'><div class='bhead'><span class='blabel'>" + lbl + "</span>" +
+        "<select data-f='bkind' style='width:auto;padding:4px'>" + kinds.map(x => "<option value='" + x + "'" + (b.kind === x ? " selected" : "") + ">" + EM.KINDS[x] + "</option>").join("") + "</select>" +
         "<label class='meta' style='display:flex;gap:4px;align-items:center'>درجة <input class='mk' type='number' step='0.5' min='0' data-f='bmark' value='" + E(b.mark) + "' style='width:64px;padding:4px'></label>" +
         "<span style='flex:1'></span><button class='iconbtn' data-act='delb' title='حذف الفرع'>✕</button></div>" +
-        rich("html", "نص الفرع…", b.html) +
-        "<details class='ans'><summary>✔ نموذج إجابة الفرع</summary>" + rich("ans", "الإجابة النموذجية…", b.ans).replace("class='rich'", "class='rich ansed'") + "</details></div>";
+        rich("html", b.kind === "head" ? "العنوان الفرعي، مثال: Write true (T) or false (F)" : b.kind === "match" ? "عنصر العمود (A)…" : "نص الفرع…", b.html);
+      if (b.kind === "mcq") h += "<div class='mcqopts'>" + b.opts.map((o, j) => "<div><input type='radio' name='bc" + b.id + "' data-f='bcorrect' data-k='" + j + "' " + (b.correct === j ? "checked" : "") + " title='الإجابة الصحيحة'><b>" + "abcd"[j] + ")</b><input data-f='bopt' data-k='" + j + "' value='" + E(o) + "' placeholder='الخيار' style='direction:ltr;text-align:left'></div>").join("") + "</div>";
+      if (b.kind === "tf") h += "<label class='meta'>الإجابة الصحيحة <select data-f='btf' style='width:auto'><option value='T'" + (b.tf === "T" ? " selected" : "") + ">True (T)</option><option value='F'" + (b.tf === "F" ? " selected" : "") + ">False (F)</option></select></label>";
+      if (b.kind === "match") h += "<input data-f='bright' placeholder='عنصر العمود (B) في هذا السطر' value='" + E(b.right) + "' style='margin-top:6px;direction:ltr;text-align:left'>";
+      if (b.kind === "ulines" || b.kind === "text") h += "<label class='meta'>سطور نقطية تحته <input type='number' min='0' max='12' data-f='blines' value='" + E(b.lines) + "' placeholder='" + (b.kind === "ulines" ? "2" : "0") + "' style='width:70px;padding:4px'></label>";
+      if (b.kind !== "head") h += "<details class='ans'><summary>✔ نموذج إجابة الفرع" + (b.kind === "match" ? " (مثال: c)" : "") + "</summary>" + rich("ans", "الإجابة النموذجية…", b.ans).replace("class='rich'", "class='rich ansed'") + "</details>";
+      h += "</div>";
     });
     h += "<details class='ans'><summary>✔ نموذج إجابة السؤال" + (q.ans ? " •" : "") + "</summary>" + rich("ans", "الإجابة النموذجية…", q.ans).replace("class='rich'", "class='rich ansed'") + "</details>";
-    h += "<div class='qfoot'><button class='btn sm ghost' data-act='addb'>➕ فرع</button>" +
+    h += "<div class='qfoot'><button class='btn sm ghost' data-act='addb'>➕ فرع</button>" + (exam ? "<button class='btn sm ghost' data-act='addhead'>➕ عنوان فرعي</button>" : "") + +
       "<label class='meta'>النوع <select data-f='type'><option value='normal'" + (q.type === "normal" ? " selected" : "") + ">تحرير</option><option value='mcq'" + (q.type === "mcq" ? " selected" : "") + ">اختيار من متعدد</option></select></label>" +
       "<label class='meta'>سطور الإجابة <input type='number' min='0' max='12' data-f='lines' value='" + E(q.lines) + "' placeholder='افتراضي' style='width:78px;padding:4px'></label></div></div>";
     return h;
@@ -89,6 +100,96 @@
     $("qCount").textContent = "(" + EM.S.questions.length + ")";
   }
   const findQ = id => EM.S.questions.find(q => q.id === id);
+
+
+  /* ---------- نمط الإنكليزية / الفرنسية ---------- */
+  function applyStyle(kind) {
+    const d = EM.S.design;
+    if (kind === "std") Object.assign(d, { layout: "std", lang: "ar", font: "'Traditional Arabic',serif", size: 17, marksTable: true, sep: "orn", frame: "f-double" });
+    else Object.assign(d, { layout: "exam", lang: kind, font: "Arial,sans-serif", size: 12.5, lineH: 1.5, qgap: 3, padTop: 10, frame: "f-thick", sep: "none", marksTable: false, instr: false, phrase: "", lines: 0, hsize: 13 });
+    EM.save(); bindAll(); renderQuestions(); if ($("tab-output").classList.contains("on")) renderPreview();
+    EM.toast(kind === "std" ? "عدنا إلى النمط العادي" : "تم تطبيق نمط " + (kind === "en" ? "الإنكليزية" : "الفرنسية"));
+  }
+  function loadLangDemo(lang) {
+    if (EM.S.questions.some(q => q.html || q.branches.length) && !confirm("سيُستبدل محتوى الأسئلة الحالي بنموذج جاهز. متابعة؟")) return;
+    const en = lang === "en", B = (kind, o) => Object.assign(EM.newBranch(kind), o), Q = o => Object.assign(EM.newQ(), o);
+    const mc = (h, opts, c) => B("mcq", { html: h, opts, correct: c });
+    const T = en ? {
+      a: "Read the following text then choose the correct answer a, b, c, or d:", p1: "Sara lives in a small village near the sea. Every morning she wakes up at six, helps her mother in the kitchen and then walks to school with her brother. After school she reads a book or plays football with her friends.",
+      q: [["Where does Sara live?", ["In a city", "Near the sea", "In the desert", "On a farm"], 1], ["What time does she wake up?", ["At five", "At six", "At seven", "At eight"], 1], ["Who walks to school with her?", ["Her father", "Her friend", "Her brother", "Her teacher"], 2]],
+      b: "Read the following text then do the tasks below:", p2: "Ahmad is a doctor. He works in a big hospital and helps sick people every day. He likes his job very much.", tfh: "- Write true (T) or false (F)",
+      tf: [["Ahmad is a teacher.", "F"], ["He works in a hospital.", "T"]], qh: "- Answer the following questions about the text:", qs: ["What is Ahmad's job?", "Does he like his job?"],
+      c: "Choose the correct answer a, b, c, or d:", cq: [["She ... to school every day.", ["go", "goes", "going", "gone"], 1], ["They are ... football now.", ["play", "plays", "playing", "played"], 2]],
+      d: "Match each item in (A) with the suitable choice from (B):", m: [["A doctor works in a", "hospital", "a"], ["A teacher works in a", "classroom", "b"], ["A farmer works on a", "farm", "c"]], mr: ["hospital", "school", "farm"],
+      e: "Write suitable questions about the underlined words:", u: ["My brother <u>plays football</u> every day.", "She lives <u>in a small village</u>."], f: "Write a 50-word paragraph about ONE of the following topics:", f1: "1. My best friend.   2. My school."
+    } : {
+      a: "Lisez le texte suivant puis choisissez la bonne réponse a, b, c ou d :", p1: "Léa habite dans un petit village près de la mer. Chaque matin, elle se lève à six heures, aide sa mère dans la cuisine puis va à l'école avec son frère. Après l'école, elle lit un livre ou joue au football avec ses amis.",
+      q: [["Où habite Léa ?", ["En ville", "Près de la mer", "Dans le désert", "Dans une ferme"], 1], ["À quelle heure se lève-t-elle ?", ["À cinq heures", "À six heures", "À sept heures", "À huit heures"], 1], ["Qui va à l'école avec elle ?", ["Son père", "Son amie", "Son frère", "Sa maîtresse"], 2]],
+      b: "Lisez le texte suivant puis répondez aux questions :", p2: "Karim est médecin. Il travaille dans un grand hôpital et aide les malades chaque jour. Il aime beaucoup son métier.", tfh: "- Vrai (V) ou faux (F) ?",
+      tf: [["Karim est professeur.", "F"], ["Il travaille dans un hôpital.", "T"]], qh: "- Répondez aux questions suivantes :", qs: ["Quel est le métier de Karim ?", "Aime-t-il son métier ?"],
+      c: "Choisissez la bonne réponse a, b, c ou d :", cq: [["Elle ... à l'école chaque jour.", ["vas", "va", "allons", "aller"], 1], ["Nous ... le football maintenant.", ["joue", "jouez", "jouons", "jouent"], 2]],
+      d: "Associez chaque élément de (A) à la réponse qui convient dans (B) :", m: [["Un médecin travaille à l'", "hôpital", "a"], ["Un professeur travaille dans une", "classe", "b"], ["Un fermier travaille dans une", "ferme", "c"]], mr: ["hôpital", "école", "ferme"],
+      e: "Posez des questions sur les mots soulignés :", u: ["Mon frère <u>joue au football</u> chaque jour.", "Elle habite <u>dans un petit village</u>."], f: "Rédigez un paragraphe de 50 mots sur UN des sujets suivants :", f1: "1. Mon meilleur ami.   2. Mon école."
+    };
+    const qA = Q({ mark: 30, title: T.a, html: T.p1, branches: T.q.map(x => mc(x[0], x[1], x[2])) });
+    const tfq = T.tf.map(x => B("tf", { html: x[0], tf: x[1] === "F" ? "F" : "T" }));
+    const qB = Q({ mark: 20, title: T.b, html: T.p2, branches: [B("head", { html: T.tfh })].concat(tfq, [B("head", { html: T.qh })], T.qs.map(x => B("text", { html: x, lines: 2 }))) });
+    const qC = Q({ mark: 20, title: T.c, branches: T.cq.map(x => mc(x[0], x[1], x[2])) });
+    const qD = Q({ mark: 15, title: T.d, branches: T.m.map((x, k) => B("match", { html: x[0], right: T.mr[(k + 1) % 3], ans: "abc"[(T.mr.indexOf(x[1]) + 2) % 3] })) });
+    const qE = Q({ mark: 10, title: T.e, branches: T.u.map(x => B("ulines", { html: x })) });
+    const qF = Q({ mark: 5, title: T.f, html: T.f1, lines: 4 });
+    EM.S.questions = [qA, qB, qC, qD, qE, qF];
+    Object.assign(EM.S.info, { subject: en ? "اللغة الإنكليزية" : "اللغة الفرنسية", time: "ساعة ونصف", total: 100 });
+    applyStyle(lang);
+    EM.toast("تم تحميل نموذج امتحان " + (en ? "إنكليزي" : "فرنسي") + " (نصوص تجريبية قابلة للتعديل)");
+  }
+  function initLangStyle() {
+    $("btnStyleEn").addEventListener("click", () => applyStyle("en"));
+    $("btnStyleFr").addEventListener("click", () => applyStyle("fr"));
+    $("btnStyleStd").addEventListener("click", () => applyStyle("std"));
+    $("btnDemoEn").addEventListener("click", () => loadLangDemo("en"));
+    $("btnDemoFr").addEventListener("click", () => loadLangDemo("fr"));
+  }
+
+
+  /* ---------- قوالب المواد (قائمة منسدلة: المادة ← الصف ← الفرع) ---------- */
+  function initTemplates() {
+    const E0 = EM.tplEntries(), selS = $("tplSubject"), selG = $("tplGrade"), selB = $("tplBranch");
+    const opt = (v, t) => "<option value='" + E(v) + "'>" + E(t || v) + "</option>";
+    const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
+    const byOrder = (a, ord) => a.slice().sort((x, y) => { const i = ord.indexOf(x), j = ord.indexOf(y); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
+    const subjects = byOrder(uniq(E0.map(e => e.s)), EM.TPL_SUBJECT_ORDER);
+    selS.innerHTML = subjects.map(x => opt(x)).join("");
+    function fillGrades() {
+      const gs = byOrder(uniq(E0.filter(e => e.s === selS.value).map(e => e.g)), EM.TPL_GRADE_ORDER);
+      selG.innerHTML = gs.map(x => opt(x)).join(""); fillBranches();
+    }
+    function fillBranches() {
+      const bs = uniq(E0.filter(e => e.s === selS.value && e.g === selG.value).map(e => e.b));
+      selB.innerHTML = bs.map(x => opt(x, x || "—")).join("");
+      $("tplBranchWrap").hidden = bs.length === 1 && bs[0] === "";
+      info();
+    }
+    const cur = () => E0.find(e => e.s === selS.value && e.g === selG.value && e.b === selB.value);
+    function info() {
+      const e = cur(); if (!e) return $("tplInfo").textContent = "";
+      const n = e.t.qs.length, tot = e.t.total;
+      $("tplInfo").textContent = "الجهة: " + e.t.ministry + " — " + n + " أقسام — الدرجة الكلية " + tot + (e.t.time ? " — الزمن: " + e.t.time : "") +
+        (e.t.gs ? " — هذا القالب يخدم الصفوف: " + e.t.gs.join("، ") : "") + (e.t.L ? " — نمط لغات (عمودان)" : "");
+    }
+    selS.addEventListener("change", fillGrades); selG.addEventListener("change", fillBranches); selB.addEventListener("change", info);
+    $("btnTpl").addEventListener("click", () => {
+      const e = cur(); if (!e) return;
+      if (EM.S.questions.some(q => q.html || q.branches.length) && !confirm("سيُستبدل محتوى الأسئلة الحالي بهيكل القالب (تبقى بيانات المدرسة والمدرّس والشعار). متابعة؟")) return;
+      const t = e.t;
+      if (t.L) applyStyle(t.L); else if (EM.S.design.layout === "exam") applyStyle("std");
+      EM.S.questions = EM.tplBuild(t);
+      Object.assign(EM.S.info, { ministry: t.ministry, subject: t.s, grade: EM.tplGradeHeader(e), time: t.time || "", total: t.total, poet: "", verses: t.verses || "" });
+      EM.save(); bindAll(); renderQuestions(); renderMarks && renderMarks();
+      EM.toast("تم تحميل قالب " + t.s + (e.g !== "عام (حسب الصف)" ? " — " + e.g : "")); 
+    });
+    fillGrades();
+  }
 
   function initQuestions() {
     const list = $("qList");
@@ -103,6 +204,10 @@
       if (el.classList.contains("rich")) { (b || q)[f] = el.innerHTML; }
       else if (f === "mark") q.mark = el.value;
       else if (f === "note") q.note = el.value;
+      else if (f === "title") q.title = el.value;
+      else if (f === "bopt" && b) b.opts[+el.dataset.k] = el.value;
+      else if (f === "bright" && b) b.right = el.value;
+      else if (f === "blines" && b) b.lines = el.value;
       else if (f === "lines") q.lines = el.value;
       else if (f === "bmark" && b) b.mark = el.value;
       else if (f === "opt") q.opts[+el.dataset.k] = el.value;
@@ -112,6 +217,10 @@
       const el = e.target, { q } = ctx(el); if (!q) return;
       if (el.dataset.f === "type") { q.type = el.value; EM.save(); renderQuestions(); }
       if (el.dataset.f === "correct") { q.correct = +el.dataset.k; EM.save(); }
+      const bb = ctx(el).b;
+      if (bb && el.dataset.f === "bkind") { bb.kind = el.value; EM.save(); renderQuestions(); onChanged("q"); }
+      if (bb && el.dataset.f === "bcorrect") { bb.correct = +el.dataset.k; EM.save(); onChanged("q"); }
+      if (bb && el.dataset.f === "btf") { bb.tf = el.value; EM.save(); onChanged("q"); }
     });
     list.addEventListener("click", e => {
       const btn = e.target.closest("[data-act]"); if (!btn) return;
@@ -120,7 +229,8 @@
       else if (act === "down" && i < qs.length - 1) [qs[i + 1], qs[i]] = [qs[i], qs[i + 1]];
       else if (act === "dup") { const c = JSON.parse(JSON.stringify(q)); c.id = EM.uid(); c.branches.forEach(x => (x.id = EM.uid())); qs.splice(i + 1, 0, c); }
       else if (act === "del") { if (qs.length === 1) qs[0] = EM.newQ(); else if (confirm("حذف هذا السؤال؟")) qs.splice(i, 1); else return; }
-      else if (act === "addb") q.branches.push(EM.newBranch());
+      else if (act === "addb") q.branches.push(EM.newBranch(EM.S.design.layout === "exam" ? "mcq" : "text"));
+      else if (act === "addhead") q.branches.push(EM.newBranch("head"));
       else if (act === "delb") q.branches.splice(q.branches.indexOf(b), 1);
       EM.save(); renderQuestions();
     });
@@ -188,14 +298,27 @@
     area.querySelectorAll(".sheet:not(.land)").forEach(s => { s.style.height = "calc(296.5mm * " + pages + ")"; s.style.overflow = "hidden"; });
     area.style.cssText = "";
   }
-  function doPrint(mode) {
+  function preparePrint(mode) {
     const area = $("printArea"), pages = +EM.S.design.fit || 0;
     const android = !!(window.Android && typeof Android.printPage === "function"), land = (+EM.S.design.perPage || 1) > 1;
     // على أندرويد لا يمكن خلط صفحات أفقية وعمودية في مهمة طباعة واحدة، فيُطبع نموذج الإجابة منفصلًا
     area.innerHTML = EM.paper.printHtml(EM.S, mode, { noKey: android && land });
     if (android && land && mode === "exam" && EM.S.design.answersSheet) EM.toast("طباعة أفقية: اطبع نموذج الإجابة بزر «طباعة نموذج الإجابة» بشكل منفصل");
     if (pages) fitSheets(area, pages);
+    return { android, land };
+  }
+  function doPrint(mode) {
+    const { android, land } = preparePrint(mode);
     setTimeout(() => { if (android) Android.printPage(land && mode === "exam"); else window.print(); }, 60);
+  }
+  /* نسخة ويندوز: حفظ ملف PDF مباشرة دون نافذة طابعة */
+  async function savePdf() {
+    const { land } = preparePrint("exam");
+    await new Promise(r => setTimeout(r, 150));
+    const name = ((EM.S.info.subject || "امتحان") + " " + (EM.S.info.grade || "")).trim();
+    const r = await window.desktop.savePdf(name, land);
+    if (r && r.ok) EM.toast("تم حفظ PDF ✔");
+    else if (r && !r.canceled) EM.toast("تعذّر حفظ PDF", true);
   }
 
   /* ---------- التدقيق ---------- */
@@ -311,9 +434,10 @@
     $("dlPhrases").innerHTML = EM.PHRASES.map(s => "<option value='" + E(s) + "'>").join("");
     ["creditLink", "creditLink2"].forEach(id => { const a = $(id); a.textContent = EM.CREDIT.name; a.href = EM.CREDIT.url; });
     document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
-    initLogo(); initQuestions(); EM.editor.init(); initQuran(); renderAll();
+    initLogo(); initQuestions(); initLangStyle(); initTemplates(); EM.editor.init(); initQuran(); renderAll();
     $("btnPrint").addEventListener("click", () => doPrint("exam"));
     $("btnPrintKey").addEventListener("click", () => doPrint("key"));
+    if (window.desktop && window.desktop.savePdf) { $("btnPdf").hidden = false; $("btnPdf").addEventListener("click", savePdf); }
     $("btnRefresh").addEventListener("click", renderPreview);
     $("btnWord").addEventListener("click", async () => { try { EM.toast("جارٍ تجهيز ملف Word…"); await EM.exp.docx(); } catch (e) { console.error(e); EM.toast("تعذّر إنشاء ملف Word", true); } });
     $("btnExcel").addEventListener("click", () => { try { EM.exp.xlsx(); } catch (e) { console.error(e); EM.toast("تعذّر إنشاء ملف Excel", true); } });

@@ -63,8 +63,15 @@ EM.exp = (function () {
       const qa = plain(q.ans || "") || (q.type === "mcq" ? q.opts[q.correct] || "" : "");
       let qt = plain(q.html) + (q.type === "mcq" ? "\n" + q.opts.map((o, k) => L.branch[k] + ") " + o).join("  ") : "");
       if (!q.branches.length) rows.push([i + 1, q.type === "mcq" ? "اختيار من متعدد" : "تحرير", qt, "", "", EM.qMark(q), qa]);
-      else q.branches.forEach((b, k) => rows.push([k ? "" : i + 1, k ? "" : (q.type === "mcq" ? "اختيار من متعدد" : "تحرير"), k ? "" : qt + (q.note ? " (" + q.note + ")" : ""),
-        L.branch[k] || k + 1, plain(b.html), b.mark === "" ? "" : +b.mark, plain(b.ans)]));
+      else q.branches.forEach((b, k) => {
+        const kn = { mcq: "اختيار", tf: "صح/خطأ", match: "مزاوجة", ulines: "سطور", head: "عنوان فرعي" }[b.kind] || "";
+        let bt = plain(b.html), ba = plain(b.ans);
+        if (b.kind === "mcq") { bt += "\n" + b.opts.map((o, j) => "abcd"[j] + ") " + o).join("  "); ba = "abcd"[b.correct] + ") " + (b.opts[b.correct] || "") + (ba ? " — " + ba : ""); }
+        else if (b.kind === "tf") ba = (b.tf === "F" ? "F" : "T") + (ba ? " — " + ba : "");
+        else if (b.kind === "match") bt += "  ⟷  " + b.right;
+        rows.push([k ? "" : i + 1, k ? "" : (q.title ? q.title : q.type === "mcq" ? "اختيار من متعدد" : "تحرير"), k ? "" : qt + (q.note ? " (" + q.note + ")" : ""),
+          (kn ? kn + " " : "") + (S.design.layout === "exam" ? "" : (L.branch[k] || k + 1)), bt, b.mark === "" ? "" : +b.mark, ba]);
+      });
     });
     rows.push(["", "", "", "", "المجموع", EM.totalMarks(), ""]);
     const col = n => String.fromCharCode(65 + n);
@@ -111,7 +118,8 @@ EM.exp = (function () {
   }
 
   async function docx() {
-    const S = EM.S, D = S.design, I = S.info, L = EM.LABELS[D.lang], rtl = D.lang === "ar";
+    const S = EM.S, D = S.design, I = S.info, exam = D.layout === "exam", L = EM.LABELS[exam && D.lang === "ar" ? "en" : D.lang], LH = exam ? EM.LABELS.ar : L;
+    let rtl = !exam && D.lang === "ar";
     const fam = (/'([^']+)'/.exec(D.font) || /^([A-Za-z ]+)/.exec(D.font) || [0, "Arial"])[1];
     const sz = Math.round(D.size * 1.5), media = [];
     let imgId = 100;
@@ -178,7 +186,7 @@ EM.exp = (function () {
     function table(node) {
       const rows = [...node.querySelectorAll("tr")], cols = Math.max(1, ...rows.map(r => r.children.length)), w = Math.floor(9000 / cols);
       const b = "<w:top w:val='single' w:sz='6'/><w:left w:val='single' w:sz='6'/><w:bottom w:val='single' w:sz='6'/><w:right w:val='single' w:sz='6'/><w:insideH w:val='single' w:sz='6'/><w:insideV w:val='single' w:sz='6'/>";
-      return "<w:tbl><w:tblPr><w:tblW w:w='5000' w:type='pct'/>" + (rtl ? "<w:bidi/>" : "") + "<w:tblBorders>" + b + "</w:tblBorders></w:tblPr><w:tblGrid>" + ("<w:gridCol w:w='" + w + "'/>").repeat(cols) + "</w:tblGrid>" +
+      return "<w:tbl><w:tblPr>" + (rtl ? "<w:bidiVisual/>" : "") + "<w:tblW w:w='5000' w:type='pct'/><w:tblBorders>" + b + "</w:tblBorders></w:tblPr><w:tblGrid>" + ("<w:gridCol w:w='" + w + "'/>").repeat(cols) + "</w:tblGrid>" +
         rows.map(r => "<w:tr>" + [...r.children].map(c => { const th = c.tagName === "TH"; return "<w:tc><w:tcPr><w:tcW w:w='" + w + "' w:type='dxa'/>" + (th ? "<w:shd w:val='clear' w:color='auto' w:fill='E8EEF5'/>" : "") + "</w:tcPr>" +
           para([...c.childNodes].map(n => inline(n, th ? { b: 1 } : {})).join(""), { after: 0 }) + "</w:tc>"; }).join("") + "</w:tr>").join("") + "</w:tbl>";
     }
@@ -209,14 +217,16 @@ EM.exp = (function () {
     const logoXml = logo && logo.querySelector("img") ? (() => { const i = logo.querySelector("img"); return addImage(i.getAttribute("src"), +i.getAttribute("data-w"), +i.getAttribute("data-h"), 0); })() : "";
     const cell = inner => "<w:tc><w:tcPr><w:tcW w:w='3000' w:type='dxa'/></w:tcPr>" + inner + "</w:tc>";
     const hp = { b: 1, sz: Math.round(D.hsize * 1.6) }, hn = { sz: Math.round(D.hsize * 1.5) };
-    const info = [[L.subject, I.subject], [L.grade, I.grade], [L.date, I.date], [L.time, I.time], [L.total, I.total === "" ? "" : String(I.total)]].filter(x => x[1]);
-    body += "<w:tbl><w:tblPr><w:tblW w:w='5000' w:type='pct'/>" + (rtl ? "<w:bidi/>" : "") + "<w:tblBorders>" + nb + "</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w='3000'/><w:gridCol w='3000'/><w:gridCol w='3000'/></w:tblGrid><w:tr>" +
+    if (exam) rtl = true;
+    const info = [[LH.subject, I.subject], [LH.grade, I.grade], [LH.date, I.date], [LH.time, I.time], [LH.total, I.total === "" ? "" : String(I.total)]].filter(x => x[1]);
+    body += "<w:tbl><w:tblPr>" + (rtl ? "<w:bidiVisual/>" : "") + "<w:tblW w:w='5000' w:type='pct'/><w:tblBorders>" + nb + "</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w='3000'/><w:gridCol w='3000'/><w:gridCol w='3000'/></w:tblGrid><w:tr>" +
       cell((I.ministry ? txt(I.ministry, hn, { after: 0 }) : "") + txt(I.school, hp, { after: 0 })) +
       cell((logoXml ? para(logoXml, { jc: "center", after: 0 }) : "") + (I.year ? txt(I.year, hn, { jc: "center", after: 0 }) : "") + txt(I.term, hp, { jc: "center", after: 0 })) +
-      cell(info.map(([k, v]) => para(run(k + ": ", { b: 1, sz: hn.sz }) + run(v, hn), { after: 0 })).join("") || para("")) + "</w:tr></w:tbl>" + para("", { after: 0 });
+      cell(info.map(([k, v]) => para(run(k + ": ", { b: 1, sz: hn.sz }) + run(v, hn), { after: 0 })).join("") || para("")) + "</w:tr></w:tbl>" + (exam ? "" : para("", { after: 0 }));
+    if (exam) { body += para(run("الاسم: ..............................", { b: 1 }) + run("          الرقم: ...............................", { b: 1 }), { after: 80 }); rtl = false; }
 
-    if (I.poet || I.verses.trim()) body += txt([I.poet].concat(I.verses.split("\n")).filter(x => x && x.trim()).join("  —  "), { i: 1 }, { jc: "center" });
-    if (D.instr && D.instrText) body += para(run(D.instrText, { b: 1 }), { jc: "center", border: "<w:pBdr><w:top w:val='single' w:sz='8' w:space='1' w:color='E07B00'/><w:left w:val='single' w:sz='8' w:space='4' w:color='E07B00'/><w:bottom w:val='single' w:sz='8' w:space='1' w:color='E07B00'/><w:right w:val='single' w:sz='8' w:space='4' w:color='E07B00'/></w:pBdr>" });
+    if (!exam && (I.poet || I.verses.trim())) body += txt([I.poet].concat(I.verses.split("\n")).filter(x => x && x.trim()).join("  —  "), { i: 1 }, { jc: "center" });
+    if (!exam && D.instr && D.instrText) body += para(run(D.instrText, { b: 1 }), { jc: "center", border: "<w:pBdr><w:top w:val='single' w:sz='8' w:space='1' w:color='E07B00'/><w:left w:val='single' w:sz='8' w:space='4' w:color='E07B00'/><w:bottom w:val='single' w:sz='8' w:space='1' w:color='E07B00'/><w:right w:val='single' w:sz='8' w:space='4' w:color='E07B00'/></w:pBdr>" });
 
     const bl = k => L.branch[k] || String(k + 1);
     const qColor = toHex(D.qcolor) || "174A7C";
@@ -228,33 +238,91 @@ EM.exp = (function () {
         if (!key) {
           if (q.html) out += blocks(await prepare(q.html));
           if (q.type === "mcq") out += para(q.opts.map((o, k) => o ? run(bl(k) + ") " + o + "      ", {}) : "").join(""));
-          for (let k = 0; k < q.branches.length; k++) { const b = q.branches[k]; out += blocks(await prepare(b.html), run(bl(k) + "- ", { b: 1 }), num(b.mark) ? run("   (" + num(b.mark) + ")", {}) : ""); }
+          const labs = EM.stdLabels(q, L);
+          for (let k = 0; k < q.branches.length; k++) {
+            const b = q.branches[k];
+            if (b.kind === "head") { out += txt(plain(b.html), { b: 1 }, { keep: true }); continue; }
+            out += blocks(await prepare(b.html), run(labs[k] + "- ", { b: 1 }), num(b.mark) ? run("   (" + num(b.mark) + ")", {}) : "");
+            if (b.kind === "mcq") out += para(run("      " + b.opts.map((o, j) => bl(j) + ") " + (o || "……………")).join("      "), {}));
+          }
           const n = q.lines === "" ? +D.lines || 0 : +q.lines || 0;
           for (let k = 0; k < Math.min(n, 12); k++) out += "<w:p><w:pPr><w:pBdr><w:bottom w:val='dotted' w:sz='6' w:space='1' w:color='888888'/></w:pBdr><w:spacing w:after='120'/></w:pPr></w:p>";
         } else {
           if (q.type === "mcq" && q.opts[q.correct]) out += txt("✔ " + bl(q.correct) + ") " + q.opts[q.correct], { b: 1 });
           if (plain(q.ans)) out += blocks(await prepare(q.ans));
-          for (let k = 0; k < q.branches.length; k++) if (plain(q.branches[k].ans)) out += blocks(await prepare(q.branches[k].ans), run(bl(k) + "- ", { b: 1 }));
+          { const labs = EM.stdLabels(q, L);
+            for (let k = 0; k < q.branches.length; k++) { const b = q.branches[k]; if (b.kind === "head") continue;
+              const pre = b.kind === "mcq" && b.opts[b.correct] ? bl(b.correct) + ") " + b.opts[b.correct] + "  " : "";
+              if (plain(b.ans) || pre) out += blocks(await prepare(b.ans), run(labs[k] + "- ", { b: 1 }) + run(pre, {})); } }
         }
       }
       return out;
     }
-    body += await questions(false);
-    if (D.marksTable) {
+    if (!exam) body += await questions(false);
+    if (D.marksTable && !exam) {
       const qs = S.questions, w = Math.floor(9000 / (qs.length + 2));
       const row = (h, cells, bold) => "<w:tr>" + [h].concat(cells).map(c => "<w:tc><w:tcPr><w:tcW w:w='" + w + "' w:type='dxa'/></w:tcPr>" + para(run(c, { b: bold, sz: 22 }), { jc: "center", after: 0 }) + "</w:tc>").join("") + "</w:tr>";
       const bd = "<w:top w:val='single' w:sz='6'/><w:left w:val='single' w:sz='6'/><w:bottom w:val='single' w:sz='6'/><w:right w:val='single' w:sz='6'/><w:insideH w:val='single' w:sz='6'/><w:insideV w:val='single' w:sz='6'/>";
-      body += txt(L.marksTitle, { b: 1 }, { jc: "center", keep: true }) + "<w:tbl><w:tblPr><w:tblW w:w='5000' w:type='pct'/>" + (rtl ? "<w:bidi/>" : "") + "<w:tblBorders>" + bd + "</w:tblBorders></w:tblPr><w:tblGrid>" + ("<w:gridCol w:w='" + w + "'/>").repeat(qs.length + 2) + "</w:tblGrid>" +
+      body += txt(L.marksTitle, { b: 1 }, { jc: "center", keep: true }) + "<w:tbl><w:tblPr>" + (rtl ? "<w:bidiVisual/>" : "") + "<w:tblW w:w='5000' w:type='pct'/><w:tblBorders>" + bd + "</w:tblBorders></w:tblPr><w:tblGrid>" + ("<w:gridCol w:w='" + w + "'/>").repeat(qs.length + 2) + "</w:tblGrid>" +
         row("", qs.map((q, i) => String(i + 1)).concat([L.sum]), 1) + row(L.full, qs.map(q => num(EM.qMark(q))).concat([num(EM.totalMarks())]), 0) + row(L.obtained, qs.map(() => "").concat([""]), 0) + "</w:tbl>" + para("");
     }
-    if (I.teacher) body += txt(L.teacher + ": " + I.teacher, {}, { after: 0 });
-    if (D.phrase) body += txt(D.phrase, { b: 1 }, { jc: "center" });
+    if (!exam && I.teacher) body += txt(L.teacher + ": " + I.teacher, {}, { after: 0 });
+    if (!exam && D.phrase) body += txt(D.phrase, { b: 1 }, { jc: "center" });
 
-    if (D.answersSheet) {
+    if (!exam && D.answersSheet) {
       body += "<w:p><w:r><w:br w:type='page'/></w:r></w:p>" + txt(L.key, { b: 1, sz: sz + 6 }, { jc: "center" }) + await questions(true);
     }
 
-    const sect = "<w:sectPr><w:pgSz w:w='11906' w:h='16838'/><w:pgMar w:top='850' w:right='1000' w:bottom='850' w:left='1000' w:header='500' w:footer='500' w:gutter='0'/>" + (rtl ? "<w:bidi/>" : "") + "</w:sectPr>";
+
+    /* ---- نمط الإنكليزية/الفرنسية: قسم بعمودين ---- */
+    const pgb = D.frame && D.frame !== "f-none" ? "<w:pgBorders w:offsetFrom='page'>" + ["top", "left", "bottom", "right"].map(x => "<w:" + x + " w:val='single' w:sz='" + (D.frame === "f-thick" || D.frame === "f-ornate" ? 24 : 12) + "' w:space='20' w:color='" + (toHex(D.hcolor) || "174A7C") + "'/>").join("") + "</w:pgBorders>" : "";
+    const pg = (cols, cont) => (cont ? "<w:type w:val='continuous'/>" : "") + "<w:pgSz w:w='11906' w:h='16838'/><w:pgMar w:top='850' w:right='1000' w:bottom='850' w:left='1000' w:header='500' w:footer='500' w:gutter='0'/>" + pgb + (cols === 2 && D.lang !== "fr" ? "<w:cols w:num='2' w:sep='1' w:space='420'/>" : "");
+    let finalSect = null;
+    if (exam) {
+      const nums = EM.paper.examNumbers(S), OL = "abcd";
+      const dotted = n => { let o = ""; for (let k = 0; k < Math.min(n, 12); k++) o += "<w:p><w:pPr><w:pBdr><w:bottom w:val='dotted' w:sz='6' w:space='1' w:color='888888'/></w:pBdr><w:spacing w:after='120'/></w:pPr></w:p>"; return o; };
+      const secTitle = (q, i) => { const m = num(EM.qMark(q)); return para(run((q.tag || String.fromCharCode(65 + (i % 26)) + ".") + (q.title ? " " + q.title : ""), { b: 1, u: 1 }) + (m !== "" ? run("  (" + m + " " + L.marks + ")", { b: 1 }) : ""), { keep: true, after: 60 }); };
+      const NB = "<w:top w:val='nil'/><w:left w:val='nil'/><w:bottom w:val='nil'/><w:right w:val='nil'/><w:insideH w:val='nil'/><w:insideV w:val='nil'/>";
+      const mtable = (grp, key) => {
+        const c = t => "<w:tc><w:tcPr><w:tcW w:w='2400' w:type='dxa'/></w:tcPr>" + t + "</w:tc>";
+        const rows = (key ? "" : "<w:tr>" + c(para(run(L.partA, { b: 1 }), { jc: "center", after: 0 })) + c(para(run(L.partB, { b: 1 }), { jc: "center", after: 0 })) + "</w:tr>") +
+          grp.map((m, k) => "<w:tr>" + c(para(run(nums.get(m.id) + ". ", { b: 1 }) + run(plain(m.html) + (key ? " → " + (plain(m.ans) || "—") : "  ( )"), {}), { after: 20 })) + c(key ? para("", { after: 0 }) : para(run("abcdefghij"[k % 10] + ". ", { b: 1 }) + run(m.right, {}), { after: 20 })) + "</w:tr>").join("");
+        return "<w:tbl><w:tblPr><w:tblW w:w='5000' w:type='pct'/><w:tblBorders>" + NB + "</w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w='2400'/><w:gridCol w:w='2400'/></w:tblGrid>" + rows + "</w:tbl>" + para("", { after: 0 });
+      };
+      async function examSections(key) {
+        let out = "";
+        for (let i = 0; i < S.questions.length; i++) {
+          const q = S.questions[i]; out += secTitle(q, i);
+          if (!key && q.note) out += txt(q.note, { u: 1 }, { keep: true });
+          if (!key && plain(q.html)) out += blocks(await prepare(q.html));
+          if (key && plain(q.ans)) out += blocks(await prepare(q.ans));
+          const br = q.branches;
+          for (let k = 0; k < br.length; k++) {
+            const b = br[k], n = nums.get(b.id), pre = run(n + ". ", { b: 1 });
+            if (b.kind === "head") { if (!key) out += txt(plain(b.html), { b: 1 }, { keep: true }); continue; }
+            if (b.kind === "match") { const grp = [b]; while (br[k + 1] && br[k + 1].kind === "match") grp.push(br[++k]); out += mtable(grp, key); continue; }
+            if (key) {
+              let a = b.kind === "mcq" ? OL[b.correct] + ". " + (b.opts[b.correct] || "") : b.kind === "tf" ? (b.tf === "F" ? "F" : "T") : "";
+              const t = plain(b.ans); if (t) a += (a ? " — " : "") + t;
+              out += para(pre + run(a || "—", {}), { after: 40 }); continue;
+            }
+            out += blocks(await prepare(b.html), pre, (b.kind === "tf" && D.lang !== "fr" ? run("    ( )", { b: 1 }) : "") + (num(b.mark) ? run("   (" + num(b.mark) + (D.lang === "fr" ? " pts" : "") + ")", {}) : ""));
+            if (b.kind === "mcq") { const o = b.opts.map((t, j) => t ? OL[j] + ". " + t : ""); out += para(run("      " + [o[0], o[1]].filter(Boolean).join("          "), {}), { after: 0 }) + para(run("      " + [o[2], o[3]].filter(Boolean).join("          "), {}), {}); }
+            else if (b.kind === "ulines") out += dotted(b.lines === "" ? 2 : +b.lines);
+            else if (+b.lines > 0) out += dotted(+b.lines);
+          }
+        }
+        return out;
+      }
+      body += "<w:p><w:pPr><w:sectPr>" + pg(1, false) + "</w:sectPr></w:pPr></w:p>";
+      body += await examSections(false);
+      body += "<w:p><w:pPr><w:sectPr>" + pg(2, true) + "</w:sectPr></w:pPr></w:p>";
+      body += txt(L.end, { b: 1 }, { jc: "center" });
+      if (D.answersSheet) body += "<w:p><w:r><w:br w:type='page'/></w:r></w:p>" + txt(L.key, { b: 1, sz: sz + 6 }, { jc: "center" }) + await examSections(true);
+      finalSect = "<w:sectPr>" + pg(1, true) + "</w:sectPr>";
+    }
+
+    const sect = finalSect || "<w:sectPr><w:pgSz w:w='11906' w:h='16838'/><w:pgMar w:top='850' w:right='1000' w:bottom='850' w:left='1000' w:header='500' w:footer='500' w:gutter='0'/>" + (rtl ? "<w:bidi/>" : "") + "</w:sectPr>";
     const document = "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><w:document " + NS + "><w:body>" + body + sect + "</w:body></w:document>";
     const exts = [...new Set(media.map(m => m.ext))];
     const files = [
@@ -262,7 +330,7 @@ EM.exp = (function () {
       { name: "_rels/.rels", data: "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><Relationships xmlns='http://schemas.openxmlformats.org/package/2006/relationships'><Relationship Id='rId1' Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument' Target='word/document.xml'/></Relationships>" },
       { name: "word/styles.xml", data: "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><w:styles xmlns:w='http://schemas.openxmlformats.org/wordprocessingml/2006/main'><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii='" + fam + "' w:hAnsi='" + fam + "' w:cs='" + fam + "'/><w:sz w:val='" + sz + "'/><w:szCs w:val='" + sz + "'/><w:lang w:val='" + (rtl ? "ar-SA" : "en-US") + "' w:bidi='ar-SA'/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type='paragraph' w:default='1' w:styleId='Normal'><w:name w:val='Normal'/></w:style></w:styles>" },
       { name: "word/document.xml", data: document },
-      { name: "word/_rels/document.xml.rels", data: "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><Relationships xmlns='http://schemas.openxmlformats.org/package/2006/relationships'>" + media.map(m => "<Relationship Id='" + m.id + "' Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/image' Target='media/" + m.name + "'/>").join("") + "</Relationships>" }
+      { name: "word/_rels/document.xml.rels", data: "<?xml version='1.0' encoding='UTF-8' standalone='yes'?><Relationships xmlns='http://schemas.openxmlformats.org/package/2006/relationships'><Relationship Id='rId1' Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles' Target='styles.xml'/>" + media.map(m => "<Relationship Id='" + m.id + "' Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/image' Target='media/" + m.name + "'/>").join("") + "</Relationships>" }
     ].concat(media.map(m => ({ name: "word/media/" + m.name, data: m.bytes })));
     download(fileName("docx"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document", zip(files));
   }

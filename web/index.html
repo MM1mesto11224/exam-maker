@@ -37,6 +37,17 @@
 <!-- ===== البيانات ===== -->
 <section class="panel on" id="tab-info">
   <div class="card">
+    <h2>📚 قوالب المواد الجاهزة</h2>
+    <div class="meta hint">اختر المادة ثم الصف ثم الفرع (إن وُجد) ليُحمَّل هيكل الامتحان الجاهز: عناوين الأسئلة ودرجاتها وأنواع البنود، لتكتب أنت الأسئلة داخلها.</div>
+    <div class="grid">
+      <label>المادة<select id="tplSubject"></select></label>
+      <label>الصف<select id="tplGrade"></select></label>
+      <label id="tplBranchWrap">الفرع / النموذج<select id="tplBranch"></select></label>
+    </div>
+    <div class="actions"><button class="btn green grow" id="btnTpl">📥 تحميل القالب</button></div>
+    <div class="meta" id="tplInfo" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
     <h2>الكليشة — بيانات الامتحان</h2>
     <div class="logo-row">
       <img id="logoPreview" alt="شعار المدرسة" hidden>
@@ -141,6 +152,8 @@
     <div class="actions">
       <button class="btn green grow" id="btnAddQ">➕ إضافة سؤال</button>
       <button class="btn ghost" id="btnDemo">🧪 مثال جاهز</button>
+      <button class="btn ghost" id="btnDemoEn">🇬🇧 نموذج امتحان إنكليزي</button>
+      <button class="btn ghost" id="btnDemoFr">🇫🇷 نموذج امتحان فرنسي</button>
     </div>
   </div>
 </section>
@@ -173,6 +186,15 @@
 
 <!-- ===== التنسيق ===== -->
 <section class="panel" id="tab-design">
+  <div class="card">
+    <h2>نمط ورقة اللغات</h2>
+    <div class="meta hint">أقسام A وB وC بعمودين وترقيم متسلسل وكليشة عربية، مع أنواع أسئلة: اختيار من متعدد وصح/خطأ ومزاوجة وسطور نقطية.</div>
+    <div class="actions">
+      <button class="btn grow" id="btnStyleEn">🇬🇧 نمط امتحان الإنكليزية</button>
+      <button class="btn grow" id="btnStyleFr">🇫🇷 نمط امتحان الفرنسية</button>
+      <button class="btn ghost" id="btnStyleStd">↩ النمط العادي</button>
+    </div>
+  </div>
   <div class="card">
     <h2>تنسيق الورقة</h2>
     <div class="grid">
@@ -233,6 +255,7 @@
     <div class="actions">
       <button class="btn gold grow" id="btnPrint">🖨️ طباعة / حفظ PDF</button>
       <button class="btn grow" id="btnPrintKey">📗 طباعة نموذج الإجابة</button>
+      <button class="btn grow" id="btnPdf" hidden>💾 حفظ PDF مباشرة</button>
     </div>
     <div class="actions">
       <button class="btn grow" id="btnWord">📘 حفظ Word</button>
@@ -286,6 +309,7 @@
 <script src="js/data.js"></script>
 <script src="js/format.js"></script>
 <script src="js/store.js"></script>
+<script src="js/templates.js"></script>
 <script src="js/paper.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/quran.js"></script>

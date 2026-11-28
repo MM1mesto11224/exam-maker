@@ -7,8 +7,10 @@ EM.ARCH = "examMaker:archive:v1";
 EM.uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 EM.newQ = () => ({ id: EM.uid(), type: "normal", mark: 10, note: "", html: "", opts: ["", "", "", ""], correct: 0,
-  branches: [], ans: "", lines: "" });
-EM.newBranch = () => ({ id: EM.uid(), html: "", mark: "", ans: "" });
+  branches: [], ans: "", lines: "", title: "", tag: "", box: false });
+/* kind: text | mcq | tf | match | ulines | head (عنوان فرعي بلا رقم) */
+EM.KINDS = { text: "نص عادي", mcq: "اختيار من متعدد (a b c d)", tf: "صح / خطأ ( )", match: "مزاوجة (A) و(B)", ulines: "سؤال بسطور نقطية", head: "عنوان فرعي بلا رقم" };
+EM.newBranch = (kind) => ({ id: EM.uid(), html: "", mark: "", ans: "", kind: kind || "text", opts: ["", "", "", ""], correct: 0, tf: "T", right: "", lines: "" });
 
 EM.defaults = () => ({
   info: { ministry: "", school: "", subject: "", grade: "", year: "2026-2027", term: "الدور الأول", date: "", time: "",
@@ -16,7 +18,7 @@ EM.defaults = () => ({
   design: { font: "'Traditional Arabic',serif", size: 17, hsize: 15, padTop: 14, lineH: 1.8, qgap: 3.4, qcolor: "#174a7c",
     hcolor: "#174a7c", tcolor: "#111111", head: "classic", lang: "ar", frame: "f-double", sep: "orn", instr: false,
     instrText: "", instrColor: "orange", marksTable: true, phrase: EM.PHRASES[0], answersSheet: true, copies: 1,
-    perPage: "1", fit: "0", lines: 0 },
+    perPage: "1", fit: "0", lines: 0, layout: "std" },
   questions: [EM.newQ()]
 });
 
@@ -29,10 +31,13 @@ EM.normalize = function (d) {
   out.info.logo = /^data:image\/(png|jpe?g|gif|webp);base64,/i.test(out.info.logo || "") ? out.info.logo : "";
   out.questions = d.questions.map(q => {
     const b = Object.assign(EM.newQ(), q);
-    b.html = S(b.html); b.ans = S(b.ans); b.note = String(b.note || "");
+    b.html = S(b.html); b.ans = S(b.ans); b.note = String(b.note || ""); b.title = String(b.title || ""); b.tag = String(b.tag || ""); b.box = !!b.box;
     b.opts = (Array.isArray(b.opts) ? b.opts : []).concat(["", "", "", ""]).slice(0, 4).map(String);
     b.branches = (Array.isArray(q.branches) ? q.branches : []).map(x => {
-      const c = Object.assign(EM.newBranch(), x); c.html = S(c.html); c.ans = S(c.ans); return c;
+      const c = Object.assign(EM.newBranch(), x); c.html = S(c.html); c.ans = S(c.ans);
+      if (!EM.KINDS[c.kind]) c.kind = "text";
+      c.opts = (Array.isArray(c.opts) ? c.opts : []).concat(["", "", "", ""]).slice(0, 4).map(String);
+      c.correct = Math.min(3, Math.max(0, +c.correct || 0)); c.tf = c.tf === "F" ? "F" : "T"; c.right = String(c.right || ""); return c;
     });
     return b;
   });
@@ -82,3 +87,10 @@ EM.qName = (i, lang) => { const L = EM.LABELS[lang]; return L.question + " " + (
 /* مجموع درجات سؤال: درجته إن وُجدت، وإلا مجموع فروعه */
 EM.qMark = q => { const m = parseFloat(q.mark); if (!isNaN(m)) return m; return q.branches.reduce((s, b) => s + (parseFloat(b.mark) || 0), 0); };
 EM.totalMarks = () => EM.S.questions.reduce((s, q) => s + EM.qMark(q), 0);
+
+
+/* ترقيم فروع النمط العادي: حروف، أو أرقام تعاد بعد كل عنوان فرعي */
+EM.stdLabels = (q, L) => { const heads = q.branches.some(b => b.kind === "head"); let c = 0;
+  return q.branches.map(b => { if (b.kind === "head") { c = 0; return null; } const i = c++; return heads ? String(i + 1) : (L.branch[i] || String(i + 1)); }); };
+/* خيارات اختيار من متعدد داخل فرع (فارغة = مربعات فارغة للتعبئة) */
+EM.stdOpts = (b, L) => "<div class='mcq'>" + b.opts.map((o, j) => "<div><b>" + L.branch[j] + ")</b> " + (o ? EM.esc(o) : "………………") + "</div>").join("") + "</div>";

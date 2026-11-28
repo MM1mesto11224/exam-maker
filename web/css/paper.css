@@ -98,3 +98,36 @@
 /* منع فصل عنوان السؤال عن نصه وتقطيع الصناديق عند الانتقال لصفحة جديدة */
 .paper .pqtitle,.paper .poetry,.paper .instr,.paper .ansprint,.paper .mtabp,.paper .pbranch{break-inside:avoid}
 .paper .pqtitle{break-after:avoid}
+
+/* ===== نمط الامتحان الإنكليزي / الفرنسي ===== */
+.paper.examp .exname{display:flex;justify-content:space-between;gap:10px;margin:6px 0 4px;font-size:var(--hs,15px)}
+.paper.examp .exbody{column-count:2;column-gap:7mm;column-rule:1.5px solid #222;text-align:left;margin-top:4px;font-family:Arial,"Segoe UI",Tahoma,sans-serif}
+.paper.examp .exsec{margin-bottom:var(--qgap,4mm)}
+.paper.examp .exh{font-weight:900;margin-bottom:3px;break-after:avoid}
+.paper.examp .exm{font-weight:700}
+.paper.examp .expass{margin-bottom:6px;text-align:justify}
+.paper.examp .exb{display:flex;gap:6px;margin-top:6px;break-inside:avoid-column}
+.paper.examp .exb .bt{flex:1}
+.paper.examp .exn{font-weight:800;white-space:nowrap}
+.paper.examp .exhead{font-weight:800;margin-top:8px}
+.paper.examp .exopts{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;margin:1px 0 0 22px;break-inside:avoid-column}
+.paper.examp .exbox{white-space:nowrap;font-weight:700}
+.paper.examp .exmatch{width:100%;border-collapse:collapse;margin-top:5px;break-inside:avoid-column}
+.paper.examp .exmatch th{font-weight:800;text-align:center}
+.paper.examp .exmatch td{padding:3px 4px;vertical-align:top;width:50%}
+.paper.examp .alines div{height:24px}
+.paper.examp .exend{text-align:center;font-weight:700;margin-top:10px;border-top:1.6px solid #333;padding-top:5px}
+.paper.examp .akey{direction:ltr}
+.paper.examp .ansprint{break-inside:avoid-column}
+.paper.examp .xqitem{break-inside:avoid-column}
+
+.paper .sthead{font-weight:800;margin-top:6px;break-after:avoid}
+.paper.examp .exbm{white-space:nowrap;font-size:.9em;color:#444}
+
+/* الفرنسية: عمود واحد بعرض الصفحة وإطار لنص القراءة */
+.paper.examp .exbody.c1{column-count:1;column-rule:0;font-family:"Times New Roman",Times,serif}
+.paper.examp .exbody.c1 .exopts{grid-template-columns:repeat(4,1fr);margin-left:22px}
+.paper.examp .exbody.c1 .exhead{text-decoration:underline}
+.paper.examp .exbody.c1 .exb{break-inside:avoid}
+.paper.examp .frbox{border:1.5px solid #222;min-height:30mm;padding:6px 10px;margin:4px 0 8px;text-align:left}
+.paper.examp .exnote{margin-bottom:3px;font-weight:700}
