@@ -147,8 +147,6 @@
     $("btnStyleEn").addEventListener("click", () => applyStyle("en"));
     $("btnStyleFr").addEventListener("click", () => applyStyle("fr"));
     $("btnStyleStd").addEventListener("click", () => applyStyle("std"));
-    $("btnDemoEn").addEventListener("click", () => loadLangDemo("en"));
-    $("btnDemoFr").addEventListener("click", () => loadLangDemo("fr"));
   }
 
 
